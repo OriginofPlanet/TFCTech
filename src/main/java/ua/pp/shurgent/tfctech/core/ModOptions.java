@@ -3,14 +3,18 @@ package ua.pp.shurgent.tfctech.core;
 import static com.bioxx.tfc.WorldGen.Generators.WorldGenOre.oreList;
 
 import java.io.File;
+import java.util.Map;
 
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import ua.pp.shurgent.tfctech.TFCTech;
 
+import com.bioxx.tfc.api.Blocks.StoneType;
+import com.bioxx.tfc.api.Blocks.StoneVariant;
 import com.bioxx.tfc.Core.Config.TFC_ConfigFiles;
 import com.bioxx.tfc.WorldGen.Generators.OreSpawnData;
 import com.bioxx.tfc.api.Constant.Global;
+import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
 
 public class ModOptions {
@@ -53,10 +57,7 @@ public class ModOptions {
 	
 	// === WORLD GEN
 	public static boolean cfgDropQuartz;
-	public static int cfgDropQuartzIgExChance;
-	public static int cfgDropQuartzIgInChance;
-	public static int cfgDropQuartzMMChance;
-	public static int cfgDropQuartzSedChance;
+	public static final Map<StoneType, Integer> cfgDropQuartzChance = Maps.newHashMap();
 	public static int cfgDropQuartzMinQty;
 	public static int cfgDropQuartzMaxQty;
 	
@@ -87,7 +88,7 @@ public class ModOptions {
 
 	private static final String[] ALLOWED_TYPES = new String[] { "default", "veins" };
 	private static final String[] ALLOWED_SIZES = new String[] { "small", "medium", "large" };
-	private static final String[] ALLOWED_BASE_ROCKS = ObjectArrays.concat(Global.STONE_ALL, new String[] { "igneous intrusive", "igneous extrusive", "sedimentary", "metamorphic" }, String.class);
+	private static final String[] ALLOWED_BASE_ROCKS = ObjectArrays.concat(StoneVariant.getAllVariantNames().toArray(new String[0]), StoneType.getAllTypeNames().toArray(new String[0]), String.class);
 
 	public static void loadSettings() {
 		TFCTech.LOG.info("Loading options.");
@@ -130,10 +131,14 @@ public class ModOptions {
 		cfgDropQuartz = getBooleanFor(config, WORLDGEN, "QuartzDropEnable", true, "Set to false to disable Quartz drops from stone.");
 		cfgDropQuartzMinQty = getIntFor(config, WORLDGEN, "QuartzDropMinQty", 1, 1, 10, "Quartz drop minimum quantity.");
 		cfgDropQuartzMaxQty = getIntFor(config, WORLDGEN, "QuartzDropMaxQty", 3, 1, 10, "Quartz drop maximum quantity.");
-		cfgDropQuartzIgExChance = getIntFor(config, WORLDGEN, "QuartzIgExDropChance", 4000, 0, 100000, "Quartz drop chance (1 in X) when harvesting Igneous Extrusive stone.");
-		cfgDropQuartzIgInChance = getIntFor(config, WORLDGEN, "QuartzIgInDropChance", 2000, 0, 100000, "Quartz drop chance (1 in X) when harvesting Igneous Intrusive stone.");
-		cfgDropQuartzMMChance = getIntFor(config, WORLDGEN, "QuartzMMDropChance", 1000, 0, 100000, "Quartz drop chance (1 in X) when harvesting Metamorphic stone.");
-		cfgDropQuartzSedChance = getIntFor(config, WORLDGEN, "QuartzSedDropChance", 500, 0, 100000, "Quartz drop chance (1 in X) when harvesting Sedimentary stone.");
+		for (StoneType st : StoneType.getAllTypes()) {
+			int defaultChance = 0;
+			if (Global.STONETYPE_IGEX.equals(st.getName())) defaultChance = 4000;
+			else if (Global.STONETYPE_IGIN.equals(st.getName())) defaultChance = 2000;
+			else if (Global.STONETYPE_MM.equals(st.getName())) defaultChance = 1000;
+			else if (Global.STONETYPE_SED.equals(st.getName())) defaultChance = 500;
+			cfgDropQuartzChance.put(st, getIntFor(config, WORLDGEN, "Quartz"+st.getAbbr()+"DropChance", defaultChance, 0, 100000, "Quartz drop chance (1 in X) when harvesting "+st.getUpperName()+" stone."));
+		}
 		
 		cfgHeveaDamage = getBooleanFor(config, WORLDGEN, "HeveaDamageEnable", true, "Set to false to disable Hevea tree damage from tapping.");
 		cfgHeveaMaxDamage = getIntFor(config, WORLDGEN, "HeveaMaxDamage", 15, 1, 15, "Number of Hevea trunk scratches before the tree gets damaged.");

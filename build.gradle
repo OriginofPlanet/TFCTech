@@ -67,7 +67,7 @@ dependencies {
 sourceSets {
    main {
      java {
-       srcDirs = [ 'src/main' , 'src/API' ]
+       srcDirs = [ 'src/main/java' , 'src/API' ]
 	   exclude '**/resources/'
      }
 	 resources {
